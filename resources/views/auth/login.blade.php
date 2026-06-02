@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — Malaysia Airlines OTA System</title>
+    <title>Sign In —  Airlines OTA System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
@@ -259,7 +259,7 @@
                 {{-- <img src="{{ asset('images/mh-logo.png') }}" alt="Malaysia Airlines"> --}}
                 <div class="mh-logo-placeholder"><span>MH</span></div>
                 <div class="mh-brand-text">
-                    <strong>Malaysia Airlines</strong>
+                    <strong> Airlines</strong>
                     <small>OTA Management System</small>
                 </div>
             </div>
@@ -271,7 +271,7 @@
                 </div>
             </div>
         </div>
-        <div class="mh-copyright">Malaysia Airlines Berhad &copy; {{ date('Y') }}</div>
+        <div class="mh-copyright"> Airlines Berhad &copy; {{ date('Y') }}</div>
     </div>
 
     {{-- RIGHT PANEL --}}
@@ -304,7 +304,7 @@
                     id="email"
                     name="email"
                     value="{{ old('email') }}"
-                    placeholder="name@malaysiaairlines.com"
+                    placeholder="name@airlines.com"
                     required
                     autofocus
                     autocomplete="email"

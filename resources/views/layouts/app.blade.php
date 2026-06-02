@@ -27,6 +27,8 @@
     <script src="/assets/vendor/js/helpers.js"></script>
     <script src="/assets/js/config.js"></script>
 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     @stack('styles')
 </head>
 
@@ -85,6 +87,12 @@
                     <a href="{{ route('stations.index') }}" class="menu-link">
                         <i class="menu-icon tf-icons ri ri-bar-chart-line"></i>
                         <div>Station</div>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{{ route('delay.index') }}" class="menu-link">
+                        <i class="menu-icon tf-icons ri ri-error-warning-line"></i>
+                        <div>Delay Code</div>
                     </a>
                 </li>
 
@@ -254,6 +262,9 @@
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/assets/js/swal-helper.js"></script>
+    <script src="/assets/js/select2-helper.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Flash Message dari Session -->
     <script>

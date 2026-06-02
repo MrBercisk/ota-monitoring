@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DelayController;
 use App\Http\Controllers\FlightController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StationController;
@@ -39,12 +40,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('flights.export.monthly');
 
     // Delay
-    Route::get('delay', [FlightController::class, 'index'])->name('delay.index');
-    Route::get('delay/create', [FlightController::class, 'create'])->name('delay.create');
-    Route::post('delay', [FlightController::class, 'store'])->name('delay.store');
-    Route::get('delay/{flight}/edit', [FlightController::class, 'edit'])->name('delay.edit');
-    Route::put('delay/{flight}', [FlightController::class, 'update'])->name('delay.update');
-    Route::delete('delay/{flight}', [FlightController::class, 'destroy'])->name('delay.destroy');
+    Route::get('delay', [DelayController::class, 'index'])->name('delay.index');
+    Route::get('delay/create', [DelayController::class, 'create'])->name('delay.create');
+    Route::post('delay', [DelayController::class, 'store'])->name('delay.store');
+    Route::get('delay/{flight}/edit', [DelayController::class, 'edit'])->name('delay.edit');
+    Route::put('delay/{flight}', [DelayController::class, 'update'])->name('delay.update');
+    Route::delete('delay/{flight}', [DelayController::class, 'destroy'])->name('delay.destroy');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
