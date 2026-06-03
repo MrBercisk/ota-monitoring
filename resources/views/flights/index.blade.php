@@ -49,69 +49,69 @@
                 </form>
             </div>
             <div class="card mt-3">
-    <div class="card-header bg-success text-white">
-        <strong>📊 Export Laporan OTA</strong>
-    </div>
-    <div class="card-body">
-        <div class="row g-3">
- 
-            {{-- Export Weekly --}}
-            <div class="col-md-6">
-                <form action="{{ route('flights.export.weekly') }}" method="GET">
-                    <label class="form-label fw-bold">Export Weekly</label>
-                    <div class="input-group">
-                        <input type="date"
-                               name="week_date"
-                               class="form-control"
-                               value="{{ date('Y-m-d') }}"
-                               required>
- 
-                        {{-- Optional: filter station --}}
-                        <select name="station_id" class="form-select">
-                            <option value="">Semua Station</option>
-                            @foreach($stations as $station)
-                                <option value="{{ $station->id }}">{{ $station->code }}</option>
-                            @endforeach
-                        </select>
- 
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-file-earmark-excel"></i> Download
-                        </button>
+                <div class="card-header bg-success text-white">
+                    <strong>📊 Export Laporan OTA</strong>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+            
+                        {{-- Export Weekly --}}
+                        <div class="col-md-6">
+                            <form action="{{ route('flights.export.weekly') }}" method="GET">
+                                <label class="form-label fw-bold">Export Weekly</label>
+                                <div class="input-group">
+                                    <input type="date"
+                                        name="week_date"
+                                        class="form-control"
+                                        value="{{ date('Y-m-d') }}"
+                                        required>
+            
+                                    {{-- Optional: filter station --}}
+                                    <select name="station_id" class="form-select">
+                                        <option value="">Semua Station</option>
+                                        @foreach($stations as $station)
+                                            <option value="{{ $station->id }}">{{ $station->code }}</option>
+                                        @endforeach
+                                    </select>
+            
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-file-earmark-excel"></i> Download
+                                    </button>
+                                </div>
+                                <small class="text-muted">Pilih tanggal mana saja dalam minggu yang diinginkan</small>
+                            </form>
+                        </div>
+            
+                        {{-- Export Monthly --}}
+                        <div class="col-md-6">
+                            <form action="{{ route('flights.export.monthly') }}" method="GET">
+                                <label class="form-label fw-bold">Export Monthly</label>
+                                <div class="input-group">
+                                    <input type="month"
+                                        name="month"
+                                        class="form-control"
+                                        value="{{ date('Y-m') }}"
+                                        required>
+            
+                                    {{-- Optional: filter station --}}
+                                    <select name="station_id" class="form-select">
+                                        <option value="">Semua Station</option>
+                                        @foreach($stations as $station)
+                                            <option value="{{ $station->id }}">{{ $station->code }}</option>
+                                        @endforeach
+                                    </select>
+            
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-file-earmark-excel"></i> Download
+                                    </button>
+                                </div>
+                                <small class="text-muted">Pilih bulan yang diinginkan</small>
+                            </form>
+                        </div>
+            
                     </div>
-                    <small class="text-muted">Pilih tanggal mana saja dalam minggu yang diinginkan</small>
-                </form>
+                </div>
             </div>
- 
-            {{-- Export Monthly --}}
-            <div class="col-md-6">
-                <form action="{{ route('flights.export.monthly') }}" method="GET">
-                    <label class="form-label fw-bold">Export Monthly</label>
-                    <div class="input-group">
-                        <input type="month"
-                               name="month"
-                               class="form-control"
-                               value="{{ date('Y-m') }}"
-                               required>
- 
-                        {{-- Optional: filter station --}}
-                        <select name="station_id" class="form-select">
-                            <option value="">Semua Station</option>
-                            @foreach($stations as $station)
-                                <option value="{{ $station->id }}">{{ $station->code }}</option>
-                            @endforeach
-                        </select>
- 
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-file-earmark-excel"></i> Download
-                        </button>
-                    </div>
-                    <small class="text-muted">Pilih bulan yang diinginkan</small>
-                </form>
-            </div>
- 
-        </div>
-    </div>
-</div>
 
 
             {{-- Tabel --}}

@@ -37,10 +37,9 @@ class FlightController extends Controller
     public function create()
     {
         $stations   = Station::all();
-        $delayCodes = DelayCode::orderBy('category')->orderBy('code')->get();
+        $delayCodes = DelayCode::with('category')->orderBy('code')->get();
         return view('flights.create', compact('stations', 'delayCodes'));
     }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -82,7 +81,7 @@ class FlightController extends Controller
     public function edit(Flight $flight)
     {
         $stations   = Station::all();
-        $delayCodes = DelayCode::orderBy('category')->orderBy('code')->get();
+        $delayCodes = DelayCode::with('category')->orderBy('code')->get();
         return view('flights.edit', compact('flight', 'stations', 'delayCodes'));
     }
 

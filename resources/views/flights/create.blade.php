@@ -65,21 +65,24 @@
                         {{-- Delay Code --}}
                         <div class="col-md-6">
                             <label class="form-label">Delay Code</label>
-                            <select name="delay_code" class="form-select select2-placeholder @error('delay_code') is-invalid @enderror">
-                                <option value="">-- Pilih Delay Code --</option>
+                            <select name="delay_code" 
+                                    class="form-select select2-placeholder @error('delay_code') is-invalid @enderror"
+                                    data-placeholder="-- Pilih Delay Code --">
+                                <option value=""></option>
                                 @php $currentCategory = '' @endphp
                                 @foreach($delayCodes as $dc)
-                                    @if($dc->category !== $currentCategory)
+                                    @php $catName = $dc->category->name ?? 'Lainnya' @endphp
+                                    @if($catName !== $currentCategory)
                                         @if($currentCategory !== '') </optgroup> @endif
-                                        <optgroup label="{{ $dc->category }}">
-                                        @php $currentCategory = $dc->category @endphp
+                                        <optgroup label="{{ $catName }}">
+                                        @php $currentCategory = $catName @endphp
                                     @endif
                                     <option value="{{ $dc->code }}"
                                         {{ old('delay_code', $flight->delay_code ?? '') == $dc->code ? 'selected' : '' }}>
                                         {{ $dc->code }} — {{ $dc->reason }}
                                     </option>
                                 @endforeach
-                                </optgroup>
+                                @if($currentCategory !== '') </optgroup> @endif
                             </select>
                             @error('delay_code')
                                 <div class="invalid-feedback">{{ $message }}</div>

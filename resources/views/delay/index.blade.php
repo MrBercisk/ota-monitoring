@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Master Station')
+@section('title', 'Master Delay Code')
 
 @section('content')
 <div class="row">
@@ -25,7 +25,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($delay_code as $delay)
+                        @forelse($delay_codes as $delay)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>
@@ -36,7 +36,7 @@
                             <td>{{ $delay->reason }}</td>
                             <td>
                                 <span class="badge bg-label-info rounded-pill">
-                                    {{ $delay->category }} 
+                                    {{ $delay->category->name ?? '-' }}
                                 </span>
                             </td>
                             <td>
@@ -47,7 +47,7 @@
                                 <form action="{{ route('delay.destroy', $delay) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')
                                     <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete"
-                                            data-message="Station {{ $delay->code }} akan dihapus permanen!">
+                                            data-message="Delay Code {{ $delay->code }} akan dihapus permanen!">
                                         <i class="ri ri-delete-bin-line"></i>
                                     </button>
                                 </form>
@@ -65,7 +65,7 @@
             </div>
 
             <div class="card-footer text-muted">
-                Total {{ $delay->count() }} station
+                Total {{ $delay_codes->count() }} station
             </div>
         </div>
     </div>

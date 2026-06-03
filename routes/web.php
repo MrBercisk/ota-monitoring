@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DelayCategoryController;
 use App\Http\Controllers\DelayController;
 use App\Http\Controllers\FlightController;
 use App\Http\Controllers\ReportController;
@@ -43,9 +44,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('delay', [DelayController::class, 'index'])->name('delay.index');
     Route::get('delay/create', [DelayController::class, 'create'])->name('delay.create');
     Route::post('delay', [DelayController::class, 'store'])->name('delay.store');
-    Route::get('delay/{flight}/edit', [DelayController::class, 'edit'])->name('delay.edit');
-    Route::put('delay/{flight}', [DelayController::class, 'update'])->name('delay.update');
-    Route::delete('delay/{flight}', [DelayController::class, 'destroy'])->name('delay.destroy');
+    Route::get('delay/{delay}/edit', [DelayController::class, 'edit'])->name('delay.edit');
+    Route::put('delay/{delay}', [DelayController::class, 'update'])->name('delay.update');
+    Route::delete('delay/{delay}', [DelayController::class, 'destroy'])->name('delay.destroy');
+
+    // Master Delay Category
+    Route::get('delay-category', [DelayCategoryController::class, 'index'])->name('delay-category.index');
+    Route::get('delay-category/create', [DelayCategoryController::class, 'create'])->name('delay-category.create');
+    Route::post('delay-category', [DelayCategoryController::class, 'store'])->name('delay-category.store');
+    Route::get('delay-category/{delayCategory}/edit', [DelayCategoryController::class, 'edit'])->name('delay-category.edit');
+    Route::put('delay-category/{delayCategory}', [DelayCategoryController::class, 'update'])->name('delay-category.update');
+    Route::delete('delay-category/{delayCategory}', [DelayCategoryController::class, 'destroy'])->name('delay-category.destroy');
 
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

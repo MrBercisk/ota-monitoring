@@ -268,19 +268,21 @@
 
     <!-- Flash Message dari Session -->
     <script>
-        @if(session('success'))
-            swalSuccess('{{ session('success') }}');
-        @endif
-        @if(session('error'))
-            swalError('{{ session('error') }}');
-        @endif
-        @if(session('warning'))
-            swalWarning('{{ session('warning') }}');
-        @endif
-        @if(session('info'))
-            swalInfo('{{ session('info') }}');
-        @endif
-    </script>
+        document.addEventListener('DOMContentLoaded', function () {
+            @if(session('success'))
+                swalSuccess(@json(session('success')));
+            @endif
+            @if(session('error'))
+                swalError(@json(session('error')));
+            @endif
+            @if(session('warning'))
+                swalWarning(@json(session('warning')));
+            @endif
+            @if(session('info'))
+                swalInfo(@json(session('info')));
+            @endif
+        });
+</script>
 
     @stack('scripts')
 </body>

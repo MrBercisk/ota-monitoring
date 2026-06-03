@@ -1,6 +1,3 @@
-// ==========================================
-// GLOBAL SWEETALERT HELPERS
-// ==========================================
 
 // Toast mixin
 window.Toast = Swal.mixin({
