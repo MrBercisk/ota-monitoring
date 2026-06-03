@@ -9,14 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+   public function up()
     {
         Schema::create('flight_schedules', function (Blueprint $table) {
             $table->id();
+            $table->string('flight_number', 20)->unique();
+            $table->time('sta')->nullable();
+            $table->time('std')->nullable();
             $table->timestamps();
         });
     }
-
     /**
      * Reverse the migrations.
      */

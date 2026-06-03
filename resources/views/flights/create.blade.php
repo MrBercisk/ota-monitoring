@@ -30,18 +30,28 @@
                             @enderror
                         </div>
 
+                     {{-- Nomor Penerbangan --}}
                         <div class="col-md-6">
                             <label class="form-label">Nomor Penerbangan <span class="text-danger">*</span></label>
-                            <input type="text"
-                                   name="flight_number"
-                                   class="form-control @error('flight_number') is-invalid @enderror"
-                                   value="{{ old('flight_number') }}"
-                                   placeholder="cth: GA-101"
-                                   style="text-transform: uppercase">
-                            @error('flight_number')
+                            <select name="flight_schedule_id"
+                                    id="flight_schedule_id"
+                                    class="form-select select2-placeholder @error('flight_schedule_id') is-invalid @enderror"
+                                    data-placeholder="-- Pilih Nomor Penerbangan --">
+                                <option value=""></option>
+                                @foreach($flightSchedules as $fs)
+                                    <option value="{{ $fs->id }}"
+                                            data-sta="{{ $fs->sta }}"
+                                            data-std="{{ $fs->std }}"
+                                        {{ old('flight_schedule_id', $flight->flight_schedule_id ?? '') == $fs->id ? 'selected' : '' }}>
+                                        {{ $fs->flight_number }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('flight_schedule_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
 
                        {{-- Station --}}
                         <div class="col-md-6">
@@ -65,8 +75,8 @@
                         {{-- Delay Code --}}
                         <div class="col-md-6">
                             <label class="form-label">Delay Code</label>
-                            <select name="delay_code" 
-                                    class="form-select select2-placeholder @error('delay_code') is-invalid @enderror"
+                            <select name="delay_code_id"
+                                    class="form-select select2-placeholder @error('delay_code_id') is-invalid @enderror"
                                     data-placeholder="-- Pilih Delay Code --">
                                 <option value=""></option>
                                 @php $currentCategory = '' @endphp
@@ -77,14 +87,14 @@
                                         <optgroup label="{{ $catName }}">
                                         @php $currentCategory = $catName @endphp
                                     @endif
-                                    <option value="{{ $dc->code }}"
-                                        {{ old('delay_code', $flight->delay_code ?? '') == $dc->code ? 'selected' : '' }}>
+                                    <option value="{{ $dc->id }}"
+                                        {{ old('delay_code_id', $flight->delay_code_id ?? '') == $dc->id ? 'selected' : '' }}>
                                         {{ $dc->code }} — {{ $dc->reason }}
                                     </option>
                                 @endforeach
                                 @if($currentCategory !== '') </optgroup> @endif
                             </select>
-                            @error('delay_code')
+                            @error('delay_code_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -224,6 +234,18 @@
             delayPreview.style.display = 'none';
         }
     }
+    // Auto-fill STA & STD saat pilih nomor penerbangan
+    $('#flight_schedule_id').on('change', function () {
+        const selected = $(this).find(':selected');
+        const sta = selected.data('sta');
+        const std = selected.data('std');
+
+        if (sta) $('[name="sta"]').val(sta);
+        if (std) $('[name="std"]').val(std);
+
+        // Trigger hitung delay jika ATA sudah terisi
+        $('[name="ata"]').trigger('change');
+    });
 
     ataInput.addEventListener('change', hitungDelay);
     staInput.addEventListener('change', hitungDelay);

@@ -77,6 +77,12 @@
                 </li>
 
                 <li class="menu-item">
+                    <a href="{{ route('flight-schedule.index') }}" class="menu-link">
+                       <i class="menu-icon tf-icons ri ri-timeline-view"></i>
+                        <div>Jadwal Penerbangan</div>
+                    </a>
+                </li>
+                <li class="menu-item">
                     <a href="{{ route('flights.index') }}" class="menu-link">
                         <i class="menu-icon tf-icons ri ri-flight-takeoff-line"></i>
                         <div>Data Penerbangan</div>
@@ -174,12 +180,7 @@
                                             <span>My Profile</span>
                                         </a>
                                     </li>
-                                    <li>
-                                        <a class="dropdown-item" href="#">
-                                            <i class="icon-base ri ri-settings-4-line icon-md me-3"></i>
-                                            <span>Settings</span>
-                                        </a>
-                                    </li>
+                                   
                                     <li>
                                         <div class="dropdown-divider my-1"></div>
                                     </li>

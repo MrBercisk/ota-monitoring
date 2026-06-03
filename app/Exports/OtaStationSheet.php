@@ -20,32 +20,37 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
     protected string  $dateFrom;
     protected string  $dateTo;
     protected Station $station;
+    protected bool   $hasFlights;
+    protected string $tabColor;
 
-    // Warna persis dari gambar
     const WHITE      = 'FFFFFFFF';
     const BLACK      = 'FF000000';
-    const BLUE_HDR   = 'FF4472C4';   // header kolom kiri
-    const BLUE_TITLE = 'FF9DC3E6';   // judul station (biru muda)
-    const PEACH      = 'FFF4B183';   // header recap (salmon/peach)
-    const GREEN_HDR  = 'FF00B050';   // OTA <15Mins
-    const RED_HDR    = 'FFFF0000';   // OTA >15Mins
-    const YELLOW_ROW = 'FFFFFF00';   // delayed >15 menit (baris & total delay)
-    const GREEN_ROW  = 'FF92D050';   // delayed ≤15 menit
-    const PINK_DELAY = 'FFFFC0CB';   // total delay ≤15 menit (pink)
-    const RED_NOOP   = 'FFFF0000';   // NOOP
-    const ORANGE_DLY = 'FFFFC000';   // warna teks delay di status
+    const BLUE_HDR   = 'FF4472C4';
+    const BLUE_TITLE = 'FF9DC3E6';
+    const PEACH      = 'FFF4B183';
+    const GREEN_HDR  = 'FF00B050';
+    const RED_HDR    = 'FFFF0000';
+    const YELLOW_ROW = 'FFFFFF00';
+    const GREEN_ROW  = 'FF92D050';
+    const PINK_DELAY = 'FFFFC0CB';
+    const RED_NOOP   = 'FFFF0000';
+    const ORANGE_DLY = 'FFFFC000';
 
-    public function __construct(string $type, string $dateFrom, string $dateTo, Station $station)
+    public function __construct(string $type, string $dateFrom, string $dateTo, Station $station, bool $hasFlights = true, string $tabColor = '1F497D')
     {
-        $this->type     = $type;
-        $this->dateFrom = $dateFrom;
-        $this->dateTo   = $dateTo;
-        $this->station  = $station;
+        $this->type       = $type;
+        $this->dateFrom   = $dateFrom;
+        $this->dateTo     = $dateTo;
+        $this->station    = $station;
+        $this->hasFlights = $hasFlights;
+        $this->tabColor   = $tabColor;
     }
+
 
     public function title(): string
     {
-        return substr(preg_replace('/[\/\\\?\*\[\]:]/', '', $this->station->code), 0, 31);
+        $code = substr(preg_replace('/[\/\\\?\*\[\]:]/', '', $this->station->code), 0, 26);
+        return $this->hasFlights ? $code : $code . ' (NOOP)';
     }
 
     public function collection(): Collection { return collect([]); }
@@ -55,8 +60,9 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
+                $event->sheet->getDelegate()->getTabColor()->setRGB($this->tabColor);
 
-                $flights = Flight::with('station')
+                $flights = Flight::with(['station', 'delayCode'])
                     ->where('station_id', $this->station->id)
                     ->whereDate('flight_date', '>=', $this->dateFrom)
                     ->whereDate('flight_date', '<=', $this->dateTo)
@@ -72,29 +78,28 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
                 $sheet->mergeCells('A1:J1');
                 $sheet->setCellValue('A1', $stationLabel);
                 $this->applyStyle($sheet, 'A1:J1', [
-                    'font'      => ['bold' => true, 'size' => 12, 'color' => self::BLACK],
-                    'fill'      => self::BLUE_TITLE,
-                    'halign'    => Alignment::HORIZONTAL_CENTER,
-                    'border'    => true,
+                    'font'   => ['bold' => true, 'size' => 12, 'color' => self::BLACK],
+                    'fill'   => self::BLUE_TITLE,
+                    'halign' => Alignment::HORIZONTAL_CENTER,
+                    'border' => true,
                 ]);
 
-                // Recap judul di kanan
                 $sheet->mergeCells('L1:P1');
                 $sheet->setCellValue('L1', $stationLabel);
                 $this->applyStyle($sheet, 'L1:P1', [
-                    'font'      => ['bold' => true, 'size' => 12, 'color' => self::BLACK],
-                    'fill'      => self::BLUE_TITLE,
-                    'halign'    => Alignment::HORIZONTAL_CENTER,
-                    'border'    => true,
+                    'font'   => ['bold' => true, 'size' => 12, 'color' => self::BLACK],
+                    'fill'   => self::BLUE_TITLE,
+                    'halign' => Alignment::HORIZONTAL_CENTER,
+                    'border' => true,
                 ]);
 
                 $sheet->mergeCells('L2:P2');
                 $sheet->setCellValue('L2', 'RECAP OTA');
                 $this->applyStyle($sheet, 'L2:P2', [
-                    'font'      => ['bold' => true, 'color' => self::BLACK],
-                    'fill'      => self::PEACH,
-                    'halign'    => Alignment::HORIZONTAL_CENTER,
-                    'border'    => true,
+                    'font'   => ['bold' => true, 'color' => self::BLACK],
+                    'fill'   => self::PEACH,
+                    'halign' => Alignment::HORIZONTAL_CENTER,
+                    'border' => true,
                 ]);
 
                 // ── Baris 2: Header kolom data ───────────────────────────────
@@ -114,14 +119,13 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
                     $sheet->setCellValue("{$col}2", $label);
                 }
                 $this->applyStyle($sheet, 'A2:J2', [
-                    'font'      => ['bold' => true, 'color' => self::WHITE],
-                    'fill'      => self::BLUE_HDR,
-                    'halign'    => Alignment::HORIZONTAL_CENTER,
-                    'valign'    => Alignment::VERTICAL_CENTER,
-                    'wrap'      => true,
-                    'border'    => true,
+                    'font'   => ['bold' => true, 'color' => self::WHITE],
+                    'fill'   => self::BLUE_HDR,
+                    'halign' => Alignment::HORIZONTAL_CENTER,
+                    'valign' => Alignment::VERTICAL_CENTER,
+                    'wrap'   => true,
+                    'border' => true,
                 ]);
-                // Garis bawah ON TIME / DELAYED
                 $sheet->getStyle('J2')->getFont()->setUnderline(true);
 
                 // ── Baris 3: Header recap ────────────────────────────────────
@@ -130,14 +134,12 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
                     $sheet->setCellValue("{$col}3", $label);
                 }
                 $this->applyStyle($sheet, 'L3:P3', [
-                    'font'      => ['bold' => true, 'color' => self::WHITE],
-                    'fill'      => self::PEACH,
-                    'halign'    => Alignment::HORIZONTAL_CENTER,
-                    'border'    => true,
+                    'font'   => ['bold' => true, 'color' => self::WHITE],
+                    'fill'   => self::PEACH,
+                    'halign' => Alignment::HORIZONTAL_CENTER,
+                    'border' => true,
                 ]);
-                // OTA <15 hijau
                 $this->applyStyle($sheet, 'M3', ['fill' => self::GREEN_HDR, 'font' => ['bold' => true, 'color' => self::WHITE]]);
-                // OTA >15 merah
                 $this->applyStyle($sheet, 'N3', ['fill' => self::RED_HDR,   'font' => ['bold' => true, 'color' => self::WHITE]]);
 
                 // ── Tulis data ───────────────────────────────────────────────
@@ -148,15 +150,12 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
                     $startRow = $row;
 
                     foreach ($dayFlights as $flight) {
-                        // Cek apakah flight punya delay_code ganda (RA + AT)
-                        // Kita simulasikan: jika ada remarks delay_code berisi koma atau multi
-                        $delayCodes = $flight->delay_code
-                            ? array_filter(array_map('trim', explode(',', $flight->delay_code)))
+                        $delayCodes = $flight->delayCode
+                            ? [$flight->delayCode->code]
                             : [''];
 
                         $firstCode = true;
                         foreach ($delayCodes as $code) {
-                            // DATE hanya di baris pertama flight pertama
                             if ($firstCode) {
                                 $sheet->setCellValue("B{$row}", $flight->flight_number);
                                 $sheet->setCellValue("C{$row}", substr($flight->sta ?? '', 0, 5));
@@ -164,7 +163,6 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
                                 $sheet->setCellValue("E{$row}", $flight->ata ? substr($flight->ata, 0, 5) : '');
                                 $sheet->setCellValue("F{$row}", $flight->atd ? substr($flight->atd, 0, 5) : '');
 
-                                // Actual TAT
                                 if ($flight->ata && $flight->atd) {
                                     $tat = Carbon::parse($flight->atd)->diffInMinutes(Carbon::parse($flight->ata));
                                     $sheet->setCellValue("G{$row}", sprintf('%d:%02d', intdiv($tat, 60), $tat % 60));
@@ -173,21 +171,16 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
                                 }
                             }
 
-                            // Delay code per baris
                             $sheet->setCellValue("H{$row}", $code);
 
-                            // Total delay
                             if ($flight->delay_minutes > 0) {
-                                $dm = $flight->delay_minutes;
+                                $dm           = $flight->delay_minutes;
                                 $delayDisplay = sprintf('%d:%02d', intdiv($dm, 60), $dm % 60);
                                 $sheet->setCellValue("I{$row}", $delayDisplay);
-
-                                // Pink jika ≤15, kuning jika >15
                                 $delayBg = $dm > 15 ? self::YELLOW_ROW : self::PINK_DELAY;
                                 $this->applyStyle($sheet, "I{$row}", ['fill' => $delayBg]);
                             }
 
-                            // Status hanya di baris pertama
                             if ($firstCode) {
                                 $statusText = match (true) {
                                     $flight->status === 'night_stop' => 'ON TIME',
@@ -197,25 +190,19 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
                                 };
                                 $sheet->setCellValue("J{$row}", $statusText);
 
-                                // Warna status
+                                // delay ≤15 = hijau, >15 = kuning
                                 $bgJ = match (true) {
-                                    $flight->status === 'noop'                                   => self::RED_NOOP,
-                                    $flight->status === 'delayed' && $flight->delay_minutes > 15 => self::YELLOW_ROW,
-                                    $flight->status === 'delayed'                                => self::GREEN_ROW,
-                                    default                                                      => self::WHITE,
-                                };
-                                $fontJ = match (true) {
-                                    $flight->status === 'noop'    => self::WHITE,
-                                    $flight->status === 'delayed' => self::BLACK,
-                                    default                       => self::BLACK,
+                                    $flight->status === 'noop'                                    => self::RED_NOOP,
+                                    $flight->status === 'delayed' && $flight->delay_minutes > 15  => self::YELLOW_ROW,
+                                    $flight->status === 'delayed' && $flight->delay_minutes <= 15 => self::GREEN_ROW,
+                                    default                                                        => self::WHITE,
                                 };
                                 $this->applyStyle($sheet, "J{$row}", [
                                     'fill' => $bgJ,
-                                    'font' => ['bold' => $flight->status === 'delayed', 'color' => $fontJ],
+                                    'font' => ['bold' => $flight->status === 'delayed', 'color' => $flight->status === 'noop' ? self::WHITE : self::BLACK],
                                 ]);
                             }
 
-                            // Border & alignment semua kolom
                             $this->applyStyle($sheet, "A{$row}:J{$row}", [
                                 'halign' => Alignment::HORIZONTAL_CENTER,
                                 'border' => true,
@@ -249,28 +236,28 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
                     $pct     = $total > 0 ? round(($onTime + $lt15) / $total * 100) : 0;
 
                     $sheet->setCellValue("L{$recapRow}", $dateLabel);
-                    $sheet->setCellValue("M{$recapRow}", $lt15);
-                    $sheet->setCellValue("N{$recapRow}", $gt15);
-                    $sheet->setCellValue("O{$recapRow}", $onTime);
+                    $sheet->setCellValue("M{$recapRow}", $lt15);   // OTA <15 
+                    $sheet->setCellValue("N{$recapRow}", $gt15);   // OTA >15
+                    $sheet->setCellValue("O{$recapRow}", $onTime); // ON TIME (delay = 0)
                     $sheet->setCellValue("P{$recapRow}", $pct . '%');
 
                     $this->applyStyle($sheet, "L{$recapRow}:P{$recapRow}", [
                         'halign' => Alignment::HORIZONTAL_CENTER,
                         'border' => true,
                     ]);
+                    $this->applyStyle($sheet, "M{$recapRow}", ['fill' => self::GREEN_HDR, 'font' => ['color' => self::WHITE]]);
                     $this->applyStyle($sheet, "N{$recapRow}", ['fill' => self::RED_HDR,   'font' => ['color' => self::WHITE]]);
-                    $this->applyStyle($sheet, "M{$recapRow}", ['fill' => self::GREEN_HDR,  'font' => ['color' => self::WHITE]]);
 
                     $recapRow++;
                 }
 
                 // ── Grand Total ──────────────────────────────────────────────
-                $counted  = $flights->filter(fn($f) => !in_array($f->status, ['night_stop', 'noop']));
-                $total    = $counted->count();
-                $lt15All  = $counted->filter(fn($f) => $f->status === 'delayed' && $f->delay_minutes <= 15)->count();
-                $gt15All  = $counted->filter(fn($f) => $f->status === 'delayed' && $f->delay_minutes > 15)->count();
-                $onTimeAll= $counted->filter(fn($f) => $f->status === 'on_time')->count();
-                $pctAll   = $total > 0 ? round(($onTimeAll + $lt15All) / $total * 100) : 0;
+                $counted   = $flights->filter(fn($f) => !in_array($f->status, ['night_stop', 'noop']));
+                $total     = $counted->count();
+                $lt15All   = $counted->filter(fn($f) => $f->status === 'delayed' && $f->delay_minutes <= 15)->count();
+                $gt15All   = $counted->filter(fn($f) => $f->status === 'delayed' && $f->delay_minutes > 15)->count();
+                $onTimeAll = $counted->filter(fn($f) => $f->status === 'on_time')->count();
+                $pctAll    = $total > 0 ? round(($onTimeAll + $lt15All) / $total * 100) : 0;
 
                 $sheet->setCellValue("L{$recapRow}", 'TOTAL');
                 $sheet->setCellValue("M{$recapRow}", $lt15All);
@@ -294,7 +281,6 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
                     $sheet->getColumnDimension($c)->setWidth($w);
                 }
 
-                // Tinggi baris 2 (header 2 baris)
                 $sheet->getRowDimension(2)->setRowHeight(30);
 
                 // ── Print setup ──────────────────────────────────────────────
@@ -313,12 +299,9 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
         if ($minutes <= 0) return 'ON TIME';
         $h = intdiv($minutes, 60);
         $m = $minutes % 60;
-        if ($minutes > 15) {
-            return $h > 0
-                ? 'DELAYED ' . ($m > 0 ? "{$h}H{$m}MINS" : "{$h}H")
-                : "DELAYED {$m}MINS";
-        }
-        return $h > 0 ? "DELAYED {$h}H{$m}MINS" : "DELAYED {$m}MINS";
+        return $h > 0
+            ? 'DELAYED ' . ($m > 0 ? "{$h}H{$m}MINS" : "{$h}H")
+            : "DELAYED {$m}MINS";
     }
 
     private function applyStyle($sheet, string $range, array $opt): void
@@ -328,8 +311,8 @@ class OtaStationSheet implements FromCollection, WithEvents, WithTitle
         if (isset($opt['font'])) {
             $f = $opt['font'];
             $s['font'] = array_filter([
-                'bold'      => $f['bold'] ?? null,
-                'size'      => $f['size'] ?? null,
+                'bold'      => $f['bold']      ?? null,
+                'size'      => $f['size']      ?? null,
                 'name'      => 'Calibri',
                 'color'     => isset($f['color']) ? ['argb' => $f['color']] : null,
                 'underline' => $f['underline'] ?? null,

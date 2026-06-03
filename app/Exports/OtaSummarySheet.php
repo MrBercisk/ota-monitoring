@@ -15,10 +15,10 @@ use PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues;
 use PhpOffice\PhpSpreadsheet\Chart\Legend;
 use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
 use PhpOffice\PhpSpreadsheet\Chart\Title;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use Maatwebsite\Excel\Concerns\WithCharts;
 use Maatwebsite\Excel\Events\AfterSheet;
 
 class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
@@ -43,7 +43,7 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
         $this->stations = $stations;
     }
 
-    public function title(): string { return 'SUMMARY'; }
+    public function title(): string { return 'OTA RECAP'; }
     public function collection(): Collection { return collect([]); }
 
     public function registerEvents(): array
@@ -51,8 +51,8 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
+                $sheet->getTabColor()->setRGB('1F497D');
 
-                // Kumpulkan semua tanggal dalam range
                 $dates = [];
                 $current = Carbon::parse($this->dateFrom);
                 $end     = Carbon::parse($this->dateTo);
@@ -65,8 +65,10 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
                 $dateTo   = Carbon::parse($this->dateTo);
                 $title    = 'OTA RECAP ' . strtoupper($dateFrom->format('d')) . '-' . strtoupper($dateTo->format('dMY')) . ' ' . $dateTo->year;
 
+                // lastCol = kolom A (index 1) + jumlah hari
+                $lastCol = Coordinate::stringFromColumnIndex(count($dates) + 1);
+
                 // ── Baris 1: Judul ───────────────────────────────────────────
-                $lastCol = chr(65 + count($dates)); // B + jumlah hari
                 $sheet->mergeCells("A1:{$lastCol}1");
                 $sheet->setCellValue('A1', $title);
                 $this->style($sheet, "A1:{$lastCol}1", [
@@ -92,7 +94,7 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
                 ]);
 
                 foreach ($dates as $i => $dateLabel) {
-                    $col = chr(66 + $i); // B, C, D, ...
+                    $col = Coordinate::stringFromColumnIndex($i + 2);
                     $sheet->setCellValue("{$col}3", $dateLabel);
                     $this->style($sheet, "{$col}3", [
                         'font'      => ['bold' => true],
@@ -111,11 +113,10 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
                         'border'    => true,
                     ]);
 
-                    $isNoop    = true; // anggap NOOP dulu, buktikan sebaliknya
-                    $noopCheck = true;
+                    $isNoop = true;
 
                     foreach ($dates as $i => $dateLabel) {
-                        $col  = chr(66 + $i);
+                        $col  = Coordinate::stringFromColumnIndex($i + 2);
                         $date = Carbon::createFromFormat('d/m', $dateLabel)->year(Carbon::parse($this->dateFrom)->year);
 
                         $flights = Flight::where('station_id', $station->id)
@@ -128,28 +129,21 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
                         if ($total > 0) $isNoop = false;
 
                         if ($total === 0) {
-                            // Cek apakah semua NOOP
-                            $allNoop = $flights->every(fn($f) => $f->status === 'noop');
-                            $pct     = 0;
-                            $display = '0%';
+                            $pct = 0;
                         } else {
-                            $lt15    = $counted->filter(fn($f) => $f->status === 'delayed' && $f->delay_minutes <= 15)->count();
-                            $onTime  = $counted->filter(fn($f) => $f->status === 'on_time')->count();
-                            $pct     = round(($onTime + $lt15) / $total * 100);
-                            $display = $pct . '%';
+                            $lt15   = $counted->filter(fn($f) => $f->status === 'delayed' && $f->delay_minutes <= 15)->count();
+                            $onTime = $counted->filter(fn($f) => $f->status === 'on_time')->count();
+                            $pct    = round(($onTime + $lt15) / $total * 100);
                         }
 
-                        $numVal = $pct / 100;
-                        $sheet->setCellValue("{$col}{$row}", $numVal);
+                        $sheet->setCellValue("{$col}{$row}", $pct / 100);
                         $sheet->getStyle("{$col}{$row}")->getNumberFormat()->setFormatCode('0%');
 
-                        // Warna cell berdasarkan %
-                        $bgColor = match (true) {
+                        $bgColor   = match (true) {
                             $pct === 100 => self::WHITE,
                             $pct === 0   => self::RED,
                             default      => self::YELLOW,
                         };
-
                         $fontColor = $pct === 0 ? self::WHITE : 'FF000000';
 
                         $this->style($sheet, "{$col}{$row}", [
@@ -160,9 +154,9 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
                         ]);
                     }
 
-                    // Label NOOP di sebelah kanan jika station selalu 0 flight
+                    // Label NOOP di kolom setelah lastCol
                     if ($isNoop) {
-                        $noopCol = chr(66 + count($dates));
+                        $noopCol = Coordinate::stringFromColumnIndex(count($dates) + 2);
                         $sheet->setCellValue("{$noopCol}{$row}", 'NOOP');
                     }
 
@@ -172,13 +166,14 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
                 // ── Lebar kolom ──────────────────────────────────────────────
                 $sheet->getColumnDimension('A')->setWidth(10);
                 foreach ($dates as $i => $_) {
-                    $sheet->getColumnDimension(chr(66 + $i))->setWidth(8);
+                    $col = Coordinate::stringFromColumnIndex($i + 2);
+                    $sheet->getColumnDimension($col)->setWidth(8);
                 }
 
                 // ── Buat Chart ───────────────────────────────────────────────
                 $this->addChart($sheet, $dates, $row);
 
-                // Print setup
+                // ── Print setup ──────────────────────────────────────────────
                 $ps = $sheet->getPageSetup();
                 $ps->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
                 $ps->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
@@ -189,7 +184,6 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
 
     private function addChart($sheet, array $dates, int $dataEndRow): void
     {
-        // Label sumbu X = nama station (kolom A, baris 4 sampai dataEndRow-1)
         $stationCount = $dataEndRow - 4;
         $lastDataRow  = $dataEndRow - 1;
 
@@ -200,42 +194,11 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
             $stationCount
         );
 
-        $dataSeries = [];
-        foreach ($dates as $i => $dateLabel) {
-            $col = chr(66 + $i);
-
-            // Konversi nilai % ke angka (hapus %)
-            // Chart pakai referensi cell langsung
-
-            $seriesLabel = new DataSeriesValues(
-                DataSeriesValues::DATASERIES_TYPE_STRING,
-                'SUMMARY!$' . $col . '$3',
-                null,
-                1
-            );
-
-            $seriesData = new DataSeriesValues(
-                DataSeriesValues::DATASERIES_TYPE_NUMBER,
-                'SUMMARY!$' . $col . '$4:$' . $col . '$' . $lastDataRow,
-                null,
-                $stationCount
-            );
-
-            $dataSeries[] = new DataSeries(
-                DataSeries::TYPE_BARCHART,
-                DataSeries::GROUPING_CLUSTERED,
-                [$i],
-                [$seriesLabel],
-                [$xAxisLabels],
-                [$seriesData]
-            );
-        }
-
-        // Gabung semua series jadi 1 DataSeries
         $seriesLabels = [];
         $seriesData   = [];
         foreach ($dates as $i => $dateLabel) {
-            $col = chr(66 + $i);
+            $col = Coordinate::stringFromColumnIndex($i + 2); 
+
             $seriesLabels[] = new DataSeriesValues(
                 DataSeriesValues::DATASERIES_TYPE_STRING,
                 'SUMMARY!$' . $col . '$3',
@@ -262,19 +225,16 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
 
         $plotArea = new PlotArea(null, [$series]);
         $legend   = new Legend(Legend::POSITION_TOP, null, false);
-        $title    = new Title('OTA RECAP ' . Carbon::parse($this->dateFrom)->format('d') . '-' . Carbon::parse($this->dateTo)->format('dMY'));
-
-        $chart = new Chart(
-            'ota_chart',
-            $title,
-            $legend,
-            $plotArea
+        $title    = new Title(
+            'OTA RECAP ' . Carbon::parse($this->dateFrom)->format('d') . '-' . Carbon::parse($this->dateTo)->format('dMY')
         );
 
-        // Posisi chart di bawah tabel
-        $chartStartRow = $dataEndRow + 2;
+        $chart = new Chart('ota_chart', $title, $legend, $plotArea);
+
+        $chartStartRow  = $dataEndRow + 2;
+        $chartEndCol    = Coordinate::stringFromColumnIndex(count($dates) + 6);
         $chart->setTopLeftPosition('A' . $chartStartRow);
-        $chart->setBottomRightPosition(chr(65 + count($dates) + 5) . ($chartStartRow + 20));
+        $chart->setBottomRightPosition("{$chartEndCol}" . ($chartStartRow + 20));
 
         $sheet->addChart($chart);
     }
@@ -286,9 +246,9 @@ class OtaSummarySheet implements FromCollection, WithEvents, WithTitle
         if (isset($opt['font'])) {
             $f = $opt['font'];
             $s['font'] = array_filter([
-                'bold'   => $f['bold'] ?? null,
+                'bold'   => $f['bold']   ?? null,
                 'italic' => $f['italic'] ?? null,
-                'size'   => $f['size'] ?? null,
+                'size'   => $f['size']   ?? null,
                 'name'   => 'Arial',
                 'color'  => isset($f['color']) ? ['argb' => $f['color']] : null,
             ]);

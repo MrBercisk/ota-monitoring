@@ -29,16 +29,23 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-
-                        <div class="col-md-6">
+                          <div class="col-md-6">
                             <label class="form-label">Nomor Penerbangan <span class="text-danger">*</span></label>
-                            <input type="text"
-                                   name="flight_number"
-                                   class="form-control @error('flight_number') is-invalid @enderror"
-                                   value="{{ old('flight_number', $flight->flight_number) }}"
-                                   placeholder="cth: GA-101"
-                                   style="text-transform: uppercase">
-                            @error('flight_number')
+                            <select name="flight_schedule_id"
+                                    id="flight_schedule_id"
+                                    class="form-select select2-placeholder @error('flight_schedule_id') is-invalid @enderror"
+                                    data-placeholder="-- Pilih Nomor Penerbangan --">
+                                <option value=""></option>
+                                @foreach($flightSchedules as $fs)
+                                    <option value="{{ $fs->id }}"
+                                            data-sta="{{ $fs->sta }}"
+                                            data-std="{{ $fs->std }}"
+                                        {{ old('flight_schedule_id', $flight->flight_schedule_id ?? '') == $fs->id ? 'selected' : '' }}>
+                                        {{ $fs->flight_number }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('flight_schedule_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -62,25 +69,28 @@
                         </div>
 
                       {{-- Delay Code --}}
-                        <div class="col-md-6">
+                       <div class="col-md-6">
                             <label class="form-label">Delay Code</label>
-                            <select name="delay_code" class="form-select select2-placeholder @error('delay_code') is-invalid @enderror">
-                                <option value="">-- Pilih Delay Code --</option>
+                            <select name="delay_code_id"
+                                    class="form-select select2-placeholder @error('delay_code_id') is-invalid @enderror"
+                                    data-placeholder="-- Pilih Delay Code --">
+                                <option value=""></option>
                                 @php $currentCategory = '' @endphp
                                 @foreach($delayCodes as $dc)
-                                    @if($dc->category !== $currentCategory)
+                                    @php $catName = $dc->category->name ?? 'Lainnya' @endphp
+                                    @if($catName !== $currentCategory)
                                         @if($currentCategory !== '') </optgroup> @endif
-                                        <optgroup label="{{ $dc->category }}">
-                                        @php $currentCategory = $dc->category @endphp
+                                        <optgroup label="{{ $catName }}">
+                                        @php $currentCategory = $catName @endphp
                                     @endif
-                                    <option value="{{ $dc->code }}"
-                                        {{ old('delay_code', $flight->delay_code) == $dc->code ? 'selected' : '' }}>
+                                    <option value="{{ $dc->id }}"
+                                        {{ old('delay_code_id', $flight->delay_code_id ?? '') == $dc->id ? 'selected' : '' }}>
                                         {{ $dc->code }} — {{ $dc->reason }}
                                     </option>
                                 @endforeach
-                                </optgroup>
+                                @if($currentCategory !== '') </optgroup> @endif
                             </select>
-                            @error('delay_code')
+                            @error('delay_code_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

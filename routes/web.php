@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DelayCategoryController;
 use App\Http\Controllers\DelayController;
 use App\Http\Controllers\FlightController;
+use App\Http\Controllers\FlightScheduleController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StationController;
 
@@ -56,6 +57,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('delay-category/{delayCategory}', [DelayCategoryController::class, 'update'])->name('delay-category.update');
     Route::delete('delay-category/{delayCategory}', [DelayCategoryController::class, 'destroy'])->name('delay-category.destroy');
 
+    // Master Flight Schedule
+    Route::get('flight-schedule', [FlightScheduleController::class, 'index'])->name('flight-schedule.index');
+    Route::get('flight-schedule/create', [FlightScheduleController::class, 'create'])->name('flight-schedule.create');
+    Route::post('flight-schedule', [FlightScheduleController::class, 'store'])->name('flight-schedule.store');
+    Route::get('flight-schedule/{flightSchedule}/edit', [FlightScheduleController::class, 'edit'])->name('flight-schedule.edit');
+    Route::put('flight-schedule/{flightSchedule}', [FlightScheduleController::class, 'update'])->name('flight-schedule.update');
+    Route::delete('flight-schedule/{flightSchedule}', [FlightScheduleController::class, 'destroy'])->name('flight-schedule.destroy');
+
+    // API auto-fill jadwal
+    Route::get('api/flight-schedule/{flightSchedule}', [FlightScheduleController::class, 'getSchedule'])->name('api.flight-schedule');
     // Reports
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
