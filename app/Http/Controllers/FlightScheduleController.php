@@ -3,16 +3,39 @@ namespace App\Http\Controllers;
 
 use App\Models\FlightSchedule;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class FlightScheduleController extends Controller
 {
     public function index()
     {
-        $schedules = FlightSchedule::orderBy('flight_number')->get();
-        return view('flight-schedule.index', compact('schedules'));
+        return view('flight-schedule.index');
     }
 
-    public function create()
+    public function datatable()
+    {
+        $query = FlightSchedule::select(['id', 'flight_number', 'sta', 'std']);
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('flight_number_badge', fn($row) =>
+                '<span class="badge bg-label-primary fs-6">' . e($row->flight_number) . '</span>'
+            )
+            ->addColumn('aksi', fn($row) =>
+                '<a href="' . route('flight-schedule.edit', $row->id) . '" class="btn btn-sm btn-icon btn-outline-primary">
+                    <i class="ri ri-edit-line"></i>
+                </a>
+                <button type="button"
+                    class="btn btn-sm btn-icon btn-outline-danger btn-delete"
+                    data-url="' . route('flight-schedule.destroy', $row->id) . '"
+                    data-message="Jadwal ' . e($row->flight_number) . ' akan dihapus permanen!">
+                    <i class="ri ri-delete-bin-line"></i>
+                </button>'
+            )
+            ->rawColumns(['flight_number_badge', 'aksi'])
+            ->make(true);
+    }
+     public function create()
     {
         return view('flight-schedule.create');
     }
@@ -53,8 +76,9 @@ class FlightScheduleController extends Controller
     public function destroy(FlightSchedule $flightSchedule)
     {
         $flightSchedule->delete();
-        return redirect()->route('flight-schedule.index')
-                         ->with('success', 'Jadwal penerbangan berhasil dihapus!');
+        return request()->expectsJson()
+            ? response()->json(['message' => 'Jadwal ' . $flightSchedule->flight_number . ' berhasil dihapus.'])
+            : redirect()->route('flight-schedule.index')->with('success', 'Jadwal berhasil dihapus!');
     }
 
     // API untuk auto-fill STA & STD
