@@ -74,9 +74,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // API auto-fill jadwal
     Route::get('api/flight-schedule/{flightSchedule}', [FlightScheduleController::class, 'getSchedule'])->name('api.flight-schedule');
     // Reports
-    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
-    Route::get('reports/print', [ReportController::class, 'print'])->name('reports.print');
+    Route::get('/reports',        [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
