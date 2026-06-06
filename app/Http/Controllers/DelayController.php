@@ -4,13 +4,47 @@ namespace App\Http\Controllers;
 use App\Models\DelayCategory;
 use App\Models\DelayCode;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class DelayController extends Controller
 {
-    public function index(Request $request)
+       public function index()
     {
-        $delay_codes = DelayCode::with('category')->get();
-        return view('delay.index', compact('delay_codes'));
+        return view('delay.index');
+    }
+ 
+    public function datatable()
+    {
+        $delay_codes = DelayCode::with('category')
+            ->select(['id', 'code', 'reason', 'delay_category_id']);
+ 
+        return DataTables::of($delay_codes)
+            ->addIndexColumn()
+            ->addColumn('code_badge', function ($delay) {
+                return '<span class="badge bg-label-primary fs-6">' . e($delay->code) . '</span>';
+            })
+            ->addColumn('category_name', function ($delay) {
+                return '<span class="badge bg-label-info rounded-pill">'
+                    . e($delay->category->name ?? '-')
+                    . '</span>';
+            })
+           ->addColumn('aksi', function ($delay) {
+                $edit = '<a href="' . route('delay.edit', $delay) . '"
+                            class="btn btn-sm btn-icon btn-outline-primary">
+                            <i class="ri ri-edit-line"></i>
+                        </a>';
+
+                $delete = '<button type="button"
+                                class="btn btn-sm btn-icon btn-outline-danger btn-delete"
+                                data-url="' . route('delay.destroy', $delay) . '"
+                                data-message="Delay Code ' . e($delay->code) . ' akan dihapus permanen!">
+                                <i class="ri ri-delete-bin-line"></i>
+                        </button>';
+
+                return $edit . ' ' . $delete;
+            })
+            ->rawColumns(['code_badge', 'category_name', 'aksi'])
+            ->make(true);
     }
 
     public function create()
@@ -63,10 +97,9 @@ class DelayController extends Controller
     }
     public function destroy(DelayCode $delay)
     {
-        // dd($delay);
         $delay->delete();
-
-        return redirect()->route('delay.index')
-                         ->with('success', 'Delay code berhasil dihapus!');
+        return request()->expectsJson()
+            ? response()->json(['message' => 'Delay code berhasil dihapus.'])
+            : redirect()->route('delay.index')->with('success', 'Delay code berhasil dihapus!');
     }
 }

@@ -10,13 +10,20 @@ use App\Exports\OtaExport;
 use App\Models\FlightSchedule;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
+use Yajra\DataTables\DataTables;
 
 class FlightController extends Controller
 {
     public function index(Request $request)
     {
         $stations = Station::all();
-        $query = Flight::with('station');
+        return view('flights.index', compact('stations'));
+    }
+
+    public function datatable(Request $request)
+    {
+        $query = Flight::with(['station', 'delayCode'])
+            ->select(['id', 'flight_date', 'flight_number', 'station_id', 'sta', 'std', 'ata', 'atd', 'delay_minutes', 'status', 'delay_code_id']);
 
         if ($request->station_id) {
             $query->where('station_id', $request->station_id);
@@ -28,13 +35,43 @@ class FlightController extends Controller
             $query->whereDate('flight_date', '<=', $request->date_to);
         }
 
-        $flights = $query->orderBy('flight_date', 'desc')
-                        ->orderBy('sta')
-                        ->paginate(20);
-
-        return view('flights.index', compact('flights', 'stations'));
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('tanggal', fn($row) =>
+                $row->flight_date->format('d/m/Y')
+            )
+            ->addColumn('station_badge', fn($row) =>
+                '<span class="badge bg-label-primary">' . e($row->station->code ?? '-') . '</span>'
+            )
+            ->addColumn('delay_badge', fn($row) =>
+                $row->delay_minutes > 0
+                    ? '<span class="badge bg-danger">' . $row->delay_minutes . ' mnt</span>'
+                    : '<span class="badge bg-success">0</span>'
+            )
+            ->addColumn('status_badge', function ($row) {
+                return match($row->status) {
+                    'on_time'    => '<span class="badge bg-success">ON TIME</span>',
+                    'delayed'    => '<span class="badge bg-danger">DELAYED</span>',
+                    default      => '<span class="badge bg-secondary">NIGHT STOP</span>',
+                };
+            })
+            ->addColumn('aksi', fn($row) =>
+                '<a href="' . route('flights.edit', $row->id) . '" class="btn btn-sm btn-icon btn-outline-primary">
+                    <i class="ri ri-edit-line"></i>
+                </a>
+                <button type="button"
+                    class="btn btn-sm btn-icon btn-outline-danger btn-delete"
+                    data-url="' . route('flights.destroy', $row->id) . '"
+                    data-message="Data penerbangan ' . e($row->flight_number) . ' tanggal ' . $row->flight_date->format('d/m/Y') . ' akan dihapus permanen!">
+                    <i class="ri ri-delete-bin-line"></i>
+                </button>'
+            )
+            ->rawColumns(['station_badge', 'delay_badge', 'status_badge', 'aksi'])
+            ->filterColumn('tanggal', fn($query, $keyword) =>
+                $query->whereRaw('DATE_FORMAT(flight_date, "%d/%m/%Y") like ?', ["%{$keyword}%"])
+            )
+            ->make(true);
     }
-
     public function create()
     {
         $stations        = Station::all();
@@ -113,8 +150,9 @@ class FlightController extends Controller
     public function destroy(Flight $flight)
     {
         $flight->delete();
-        return redirect()->route('flights.index')
-                        ->with('success', 'Data berhasil dihapus!');
+        return request()->expectsJson()
+            ? response()->json(['message' => 'Data penerbangan ' . $flight->flight_number . ' berhasil dihapus.'])
+            : redirect()->route('flights.index')->with('success', 'Data berhasil dihapus!');
     }
     public function exportWeekly(Request $request)
     {
