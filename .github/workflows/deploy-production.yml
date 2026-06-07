@@ -1,0 +1,51 @@
+name: Deploy ke Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Build Vite
+        run: |
+          npm ci
+          npm run build
+
+      - name: Upload build ke production
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 45022
+          source: "public/build"
+          target: "~/public_html/ota-monitoring"
+
+      - name: SSH Deploy ke Production
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 45022
+          script: |
+            cd ~/public_html/ota-monitoring || exit 1
+            git fetch origin
+            git reset --hard origin/main
+            composer install --no-dev --optimize-autoloader
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan migrate --force
+            chmod -R 775 storage bootstrap/cache
+            echo "===== PRODUCTION DEPLOY SELESAI ====="

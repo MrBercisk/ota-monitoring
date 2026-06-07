@@ -7,6 +7,7 @@ use App\Http\Controllers\DelayCategoryController;
 use App\Http\Controllers\DelayController;
 use App\Http\Controllers\FlightController;
 use App\Http\Controllers\FlightScheduleController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StationController;
 use App\Http\Controllers\UserController;
@@ -90,6 +91,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('user/{user}/edit', [UserController::class, 'edit'])->name('user.edit');
     Route::put('user/{user}', [UserController::class, 'update'])->name('user.update');
     Route::delete('user/{user}', [UserController::class, 'destroy'])->name('user.destroy');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
 });
 
