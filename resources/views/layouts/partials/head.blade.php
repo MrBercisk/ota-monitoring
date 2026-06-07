@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="/assets/vendor/libs/node-waves/node-waves.css" />
 <link rel="stylesheet" href="/assets/vendor/css/core.css" />
 <link rel="stylesheet" href="/assets/css/demo.css" />
+<link rel="stylesheet" href="/assets/css/sidebar.css" />
 <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
 
 <!-- Third Party CSS -->
