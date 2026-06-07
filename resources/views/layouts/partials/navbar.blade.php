@@ -10,8 +10,20 @@
     {{-- WRAPPER: kiri + kanan dalam satu flex row full width --}}
     <div class="d-flex align-items-center w-100 gap-3">
 
-        {{-- Kiri: Page title + breadcrumb --}}
-        <div class="d-none d-xl-flex flex-column justify-content-center" style="flex: 1 1 auto; min-width: 0;">
+    {{-- Kiri: Page title + breadcrumb --}}
+    <div class="d-none d-xl-flex align-items-center gap-2" style="flex: 1 1 auto; min-width: 0;">
+
+        {{-- Icon toggle KHUSUS desktop — TIDAK pakai class layout-menu-toggle --}}
+        <a href="javascript:void(0)"
+        id="desktopMenuToggle"
+        class="nav-link d-flex align-items-center justify-content-center me-1"
+        style="width:34px; height:34px; border-radius:8px; color: var(--bs-secondary-color, #697a8d); flex-shrink:0;"
+        title="Toggle Menu">
+          <i class="ri ri-menu-fold-line" style="font-size:18px;"></i>
+        </a>
+
+        {{-- Page title + breadcrumb --}}
+        <div class="d-flex flex-column justify-content-center" style="min-width:0;">
             <h6 class="navbar-page-title mb-0" id="navbar-page-title">Dashboard</h6>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb navbar-breadcrumb mb-0" id="navbar-breadcrumb">
@@ -20,6 +32,8 @@
                 </ol>
             </nav>
         </div>
+
+    </div>
 
         {{-- Kanan --}}
         <div class="d-flex align-items-center gap-3 ms-auto" style="flex: 0 0 auto;">
@@ -59,7 +73,7 @@
                         {{-- List --}}
                         <div class="notif-list" id="notif-list"></div>
 
-                        {{-- Empty state — di luar notif-list agar tidak tertimpa innerHTML --}}
+                        {{-- Empty state --}}
                         <div class="notif-empty text-center py-4" id="notif-empty" style="display:none">
                             <i class="ri ri-notification-off-line" style="font-size:28px;color:#d0d5dd;"></i>
                             <p class="mt-1 mb-0" style="font-size:12px;color:#b0b8c1;">Tidak ada notifikasi</p>
@@ -137,4 +151,41 @@
 
 <script>
     window.NOTIF_ROUTE = "{{ route('notifications.index') }}";
+    (function () {
+    const STORAGE_KEY = 'sidebar-collapsed';
+    const htmlEl = document.documentElement;
+    const toggleBtn = document.getElementById('desktopMenuToggle');
+    const COLLAPSED_CLASS = 'layout-menu-collapsed';
+
+    // Hanya jalankan di desktop (≥1200px)
+    function isDesktop() {
+        return window.innerWidth >= 1200;
+    }
+
+    // Restore state
+    if (isDesktop() && localStorage.getItem(STORAGE_KEY) === 'true') {
+        htmlEl.classList.add(COLLAPSED_CLASS);
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation(); // pastikan tidak bubble ke handler lain
+
+            if (!isDesktop()) return; // abaikan jika mobile/tablet
+
+            const isCollapsed = htmlEl.classList.toggle(COLLAPSED_CLASS);
+            localStorage.setItem(STORAGE_KEY, isCollapsed);
+        });
+    }
+
+    // Reset collapsed state saat resize ke mobile
+    window.addEventListener('resize', function () {
+        if (!isDesktop()) {
+            htmlEl.classList.remove(COLLAPSED_CLASS);
+        } else if (localStorage.getItem(STORAGE_KEY) === 'true') {
+            htmlEl.classList.add(COLLAPSED_CLASS);
+        }
+    });
+})();
 </script>
