@@ -434,3 +434,26 @@
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Sidebar collapsed state */
+.layout-menu-collapsed .layout-menu {
+    width: 60px !important;
+}
+.layout-menu-collapsed .menu-item .menu-link .menu-text,
+.layout-menu-collapsed .app-brand-text,
+.layout-menu-collapsed .menu-item .menu-sub {
+    display: none !important;
+}
+.layout-menu-collapsed .menu-item .menu-link {
+    justify-content: center;
+    padding: 0.625rem;
+}
+.layout-menu-collapsed .menu-item .menu-link .menu-icon {
+    margin-left: 9px !important;
+}
+.layout-menu-collapsed .app-brand .app-brand-logo{
+    transform: translateX(-7px);
+}
+.layout-menu-collapsed .menu-item .menu-link .menu-icon {
+    transform: translateX(5px);
+}
